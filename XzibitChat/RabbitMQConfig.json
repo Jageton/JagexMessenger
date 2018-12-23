@@ -1,0 +1,17 @@
+{
+  "ConnectionString": "",
+  "ConsumeQueue": {
+    "Name": "output",
+    "Consumer" : "webclient",
+    "AutoAcs" : false,
+    "Exclusive" : false,
+    "NoLocal" : false,
+    "NoWait" : false
+  },
+  "PublishConfig": {
+    "Name" : "inputExchange",
+    "Key"  : "input",
+    "Mandatory" : false,
+    "Immediate" : false
+  }
+}
