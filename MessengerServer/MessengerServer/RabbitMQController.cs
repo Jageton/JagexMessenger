@@ -30,8 +30,7 @@ namespace MessengerServer
                 VirtualHost = virtualHost,
                 HostName = hostName
             };
-            IConnection conn = factory.CreateConnection();
-            return conn;
+            return factory.CreateConnection();
         }
         
         public void SendMessage(string msg, string exchangeName, string routingKey)

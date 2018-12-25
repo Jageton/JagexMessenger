@@ -1,16 +1,18 @@
-﻿namespace MessengerServer
+﻿using System.Text;
+
+namespace MessengerServer
 {
     class Request
     {
         public readonly long Id;
-        public string Command { get; internal set; }
-        public string Data { get; internal set; }
+        public string Command { get; set; }
+        public string Data { get; set; }
 
-        public Request(long id, string cmd, string data)
+        public Request(long id, string command, byte[] data)
         {
             Id = id;
-            Command = cmd;
-            Data = data;
+            Command = command;
+            Data = Encoding.UTF8.GetString(data);
         }
     }
 }

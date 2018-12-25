@@ -76,18 +76,19 @@ namespace MessengerServer
             var data = JsonParser.DeserializeAnonymousType(obj,
                 new { DialogName = "", FromUserId = 0L, UserLogins = new string[0] });
             var userIds = new List<long>() { data.FromUserId };
-            var notExistName = new List<string>();
+            var notExistNames = new List<string>();
             string exc = "";
 
-            foreach (var item in data.UserLogins)
-                if (_dbWorker.GetUserId(item, out long id))
-                    userIds.Add(id);
-                else
-                    notExistName.Add(item);
-            
+            if (data.UserLogins != null)
+                foreach (var item in data.UserLogins)
+                    if (_dbWorker.GetUserId(item, out long id))
+                        userIds.Add(id);
+                    else
+                        notExistNames.Add(item);
+
             long dialogId = _dbWorker.CreateDialog(data.DialogName, userIds);
-            if (notExistName.Count != 0)
-                exc = string.Join(", ", notExistName);
+            if (notExistNames.Count != 0)
+                exc = string.Join(", ", notExistNames);
 
             return JsonParser.Serialize(
                 new { UserIds = userIds, DialogId = dialogId, Exception = exc });
@@ -118,18 +119,19 @@ namespace MessengerServer
                 res = "Пользователя с таким логином не существует.";
 
             // Проверить есть ли такой toUserId в списке DialogId
-            if (!_dbWorker.UserInDialog(data.FromUserID, data.DialogId))
+            if (!_dbWorker.UserInDialog(toUserId, data.DialogId))
                 _dbWorker.AddUserInDialog(toUserId, data.DialogId);
 
-            return JsonParser.SerializeException(res);
+            return JsonParser.Serialize(new { UserId = toUserId, Exception = res });
         }
 
         public string GetDialogsList(string obj)
         {
             var data = JsonParser.DeserializeAnonymousType(obj,
                 new { UserID = 0L });
+            var dialogs = _dbWorker.GetAllUserDialogs(data.UserID);
 
-            return JsonParser.Serialize(_dbWorker.GetAllUserDialogs(data.UserID));
+            return JsonParser.Serialize(new { DialogsList = dialogs, Exception = "" });
         }
 
         public string Authentification(string obj)
@@ -144,7 +146,7 @@ namespace MessengerServer
 
             return JsonParser.SerializeException(res);
         }
-        
+
         public string Registration(string obj)
         {
             var data = JsonParser.DeserializeAnonymousType(obj,

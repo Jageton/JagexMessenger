@@ -43,19 +43,32 @@ namespace MessengerServer.DbWorkers
         {
             return CheckExist("SELECT messenger_sch.dialogs_tb.id" +
                 " FROM messenger_sch.dialogs_tb " +
-                $"WHERE messenger_sch.dialogs_tb.id = {dialogId} AND {userId} = ANY (messenger_sch.dialogs_tb.users_id)");
+                $"WHERE messenger_sch.dialogs_tb.id = {dialogId} AND " +
+                $"{userId} = ANY (messenger_sch.dialogs_tb.users_id)");
         }
 
         public void AddUserInDialog(long userId, long dialogId)
         {
-            string cmd = "UPDATE messenger_sch.dialogs_tb " +
-                $"SET users_id[array_length(users_id, 1) + 1] = {userId} " +
-                $"WHERE id = {dialogId}";
-            ExecuteNonQuery(cmd);
-            cmd = "UPDATE messenger_sch.users_tb " +
-                $"SET dialogs_id[array_length(dialogs_id, 1) + 1] = {dialogId} " +
-                $"WHERE id = {userId}";
-            ExecuteNonQuery(cmd);
+            AddUserIdInDialog(userId, dialogId);
+            AddDialogIdInUser(userId, dialogId);
+        }
+
+        void AddUserIdInDialog(long userId, long dialogId)
+        {
+            var ids = new List<long>(GetAllDialogUsersId(dialogId));
+            if (ids == null)
+                return;
+            ids.Add(userId);
+            AssertUsersId(dialogId, ids);
+        }
+
+        void AddDialogIdInUser(long userId, long dialogId)
+        {
+            var ids = new List<long>(GetAllUserDialogsId(userId));
+            if (ids == null)
+                return;
+            ids.Add(dialogId);
+            AssertDialogsId(userId, ids);
         }
 
         public long CreateDialog(string dialogName, ICollection<long> userIds)
@@ -64,39 +77,50 @@ namespace MessengerServer.DbWorkers
                 $"VALUES ('{dialogName}', ARRAY[{string.Join(",", userIds)}])";
             ExecuteNonQuery(cmd);
 
-            return (long)ExecuteScalar(
+            long dialogId = (long)ExecuteScalar(
                 "SELECT id FROM messenger_sch.dialogs_tb ORDER BY id DESC LIMIT 1");
+            
+            foreach (var item in userIds)
+                AddDialogIdInUser(item, dialogId);
+
+            return dialogId;
         }
 
         public void DeleteUserFromDialog(long userId, long dialogId)
         {
-            var ids = new List<long>((long[])ExecuteScalar(
-                "SELECT messenger_sch.dialogs_tb.users_id" +
-                " FROM messenger_sch.dialogs_tb " +
-                $"WHERE messenger_sch.dialogs_tb.id = {dialogId}"));
-
+            var ids = new List<long>(GetAllDialogUsersId(dialogId));
             if (ids == null)
                 return;
             ids.Remove(userId);
+            AssertUsersId(dialogId, ids);
 
-            string cmd = "UPDATE messenger_sch.dialogs_tb " +
-                $"SET users_id = ARRAY[{string.Join(",", ids)}] " +
-                $"WHERE id = {dialogId}";
-            ExecuteNonQuery(cmd);
-
-            ids = new List<long>((long[])ExecuteScalar(
-                "SELECT messenger_sch.users_tb.dialogs_id" +
-                " FROM messenger_sch.users_tb " +
-                $"WHERE messenger_sch.users_tb.id = {userId}"));
-
+            ids = new List<long>(GetAllUserDialogsId(userId));
             if (ids == null)
                 return;
             ids.Remove(dialogId);
+            AssertDialogsId(userId, ids);
+        }
 
-            cmd = "UPDATE messenger_sch.users_tb " +
+        void AssertUsersId(long dialogId, ICollection<long> ids)
+        {
+            ExecuteNonQuery("UPDATE messenger_sch.dialogs_tb " +
+                $"SET users_id = ARRAY[{string.Join(",", ids)}] " +
+                $"WHERE id = {dialogId}");
+        }
+
+        void AssertDialogsId(long userId, ICollection<long> ids)
+        {
+            ExecuteNonQuery("UPDATE messenger_sch.users_tb " +
                 $"SET dialogs_id = ARRAY[{string.Join(",", ids)}] " +
-                $"WHERE id = {userId}";
-            ExecuteNonQuery(cmd);
+                $"WHERE id = {userId}");
+        }
+
+        public long[] GetAllDialogUsersId(long dialogId)
+        {
+            return (long[])ExecuteScalar(
+                "SELECT messenger_sch.dialogs_tb.users_id" +
+                " FROM messenger_sch.dialogs_tb " +
+                $"WHERE messenger_sch.dialogs_tb.id = {dialogId}");
         }
 
         public bool GetUserId(string login, out long userId)
@@ -112,8 +136,10 @@ namespace MessengerServer.DbWorkers
 
         public ICollection<Dialog> GetAllUserDialogs(long userId)
         {
-            long[] dialogsId = (long[])GetAllUserDialogsId(userId);
-
+            long[] dialogsId = GetAllUserDialogsId(userId);
+            if (dialogsId.Length == 0)
+                return new List<Dialog>();
+            
             string where = BuildQueryStringOfEquals("messenger_sch.dialogs_tb.id", dialogsId);
             string cmd = "SELECT messenger_sch.dialogs_tb.id, messenger_sch.dialogs_tb.name" +
                 " FROM messenger_sch.dialogs_tb " +
@@ -122,9 +148,9 @@ namespace MessengerServer.DbWorkers
             return GetDialogsInfo(cmd);
         }
 
-        public ICollection<long> GetAllUserDialogsId(long userId)
+        public long[] GetAllUserDialogsId(long userId)
         {
-            return (ICollection<long>)ExecuteScalar(
+            return (long[])ExecuteScalar(
                 "SELECT messenger_sch.users_tb.dialogs_id" +
                 " FROM messenger_sch.users_tb " +
                 $"WHERE messenger_sch.users_tb.id = {userId}");

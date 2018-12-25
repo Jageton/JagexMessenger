@@ -8,6 +8,7 @@ namespace MessengerServer
         RabbitMQController _rmqCtrl;
         CommandExecutor _cmdExec;
         Config _config;
+
         public SessionManager(Config config)
         {
             _config = config;
@@ -22,7 +23,7 @@ namespace MessengerServer
         {
             SettingsRMQController();
             _rmqCtrl.GetMsg += ExecuteAndSendResult;
-            _rmqCtrl.Listen(_config.OutputQueue.Name);
+            _rmqCtrl.Listen(_config.InputQueue.Name);
         }
 
         void SettingsRMQController()
@@ -36,7 +37,7 @@ namespace MessengerServer
         void ExecuteAndSendResult(object sender, BasicDeliverEventArgs e)
         {
             string queryResult = _cmdExec.SwitchAndExecuteCommand(Encoding.UTF8.GetString(e.Body));
-            _rmqCtrl.SendMessage(queryResult, e.Exchange, _config.InputQueue.Name);
+            _rmqCtrl.SendMessage(queryResult, e.Exchange, _config.OutputQueue.Name);
         }
     }
 }
