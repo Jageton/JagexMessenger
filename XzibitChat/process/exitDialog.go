@@ -5,6 +5,7 @@ import "github.com/go-telegram-bot-api/telegram-bot-api"
 type ExitDialogCommand struct {
 	DefaultUserHandler
 	DefaultCommandNameGetterSetter
+	DefaultAnswerParser
 }
 
 func (e ExitDialogCommand) CommandName() string {
@@ -16,11 +17,11 @@ func (e ExitDialogCommand) GetParsedJSON() []byte {
 }
 
 func (e ExitDialogCommand) ParseData(*tgbotapi.Message) bool {
-	panic("implement me")
+	return true
 }
 
 func (e ExitDialogCommand) Help() string {
-	return "You will exit dialog for a time. You can come back in dialog."
+	return "/exit You will exit dialog for a time. You can come back in dialog."
 }
 
 func ( ExitDialogCommand) IsGlobal() bool {
@@ -46,9 +47,6 @@ func (e *ExitDialogCommand) PreExecuteCheck() bool {
 
 func (e *ExitDialogCommand) Execute() {
 	e.user.Hub().LeaveHub(e.user.ID())
-}
-
-func ( ExitDialogCommand) ParseAnswer(map[string]interface{}) error {
-    return nil
+	SendMessage(e.user.ID(), "You left dialog!")
 }
 

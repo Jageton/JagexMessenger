@@ -4,21 +4,21 @@ import (
 	"XzibitChat/chat"
 	"encoding/json"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/mitchellh/mapstructure"
 	"strings"
 )
 
 type CreateDialogCommand struct {
 	DefaultCommandNameGetterSetter
 	DefaultUserHandler
-	DefaultAnswerParser
 	DialogId              int64
 	DialogName     string
 	UserLogins   []string
-	UsersIds     []int64
+	UserIds     []int64
 }
 
 func (e CreateDialogCommand) CommandName() string {
-    return "CreateDialog"
+    return "create_dialog"
 }
 
 func (CreateDialogCommand) IsGlobal() bool {
@@ -43,19 +43,22 @@ func (e *CreateDialogCommand) PreExecuteCheck() bool {
 }
 
 func (e CreateDialogCommand) Execute() {
-	hub := chat.NewHub()
+	hub := chat.NewHub(e.DialogId)
 	hub.EnterHub(e.user)
 	Processor.Hubs.Add(e.DialogId, hub)
 	SendMessage(e.user.ID(), "Dialogue was created!")
-	for _, id := range e.UsersIds {
+	for _, id := range e.UserIds {
+		if e.user.ID() == id {
+			continue
+		}
 		SendMessage(id, "You was added to dialog: " + e.DialogName)
 	}
 }
 
 func (e *CreateDialogCommand) GetParsedJSON() []byte {
 	m := map[string]interface{}{
-		"DialogueName" : e.DialogName,
-		"Users" : e.UserLogins,
+		"DialogName" : e.DialogName,
+		"UserLogins" : e.UserLogins,
 		"FromUserId" : e.user.ID(),
 	}
 	bytes, _ := json.Marshal(m)
@@ -76,6 +79,14 @@ func (e *CreateDialogCommand) ParseData(msg *tgbotapi.Message) bool {
 }
 
 func ( CreateDialogCommand) Help() string {
-    return "/CreateHub Name Users..."
+    return "/create Name Users..."
 }
 
+func (e * CreateDialogCommand) ParseAnswer(args []byte) error {
+	m := map[string]interface{}{}
+	err := json.Unmarshal(args, &m)
+	if err != nil {
+		return err
+	}
+	return mapstructure.Decode(m, &e)
+}

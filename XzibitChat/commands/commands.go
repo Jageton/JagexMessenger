@@ -16,7 +16,7 @@ type CommandNameGetterSetter interface {
 }
 
 type AnswerParser interface {
-	ParseAnswer(map[string]interface{}) error
+	ParseAnswer([]byte) error
 }
 
 type Command interface {

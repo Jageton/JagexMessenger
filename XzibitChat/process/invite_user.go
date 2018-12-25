@@ -16,7 +16,7 @@ type InviteUserCommand struct {
 }
 
 func (e InviteUserCommand) CommandName() string {
-    return "InviteUserToDialog"
+    return "invite_to_dialog"
 }
 
 func (e InviteUserCommand) GetParsedJSON() []byte {

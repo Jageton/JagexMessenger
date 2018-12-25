@@ -1,25 +1,26 @@
 package chat
 
 import (
-	"XzibitChat/tmessage"
 	"XzibitChat/telegram"
+	"XzibitChat/tmessage"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 type Dialog struct {
 	users *UserManager
 	name  string
-	id    int
+	id    int64
 }
 
 
-func NewHub() *Dialog {
+func NewHub(id int64) *Dialog {
 	return &Dialog{
 		users: NewUserManager(),
+		id : id,
 	}
 }
 
-func (h Dialog) ID() int {
+func (h Dialog) ID() int64 {
 	return h.id
 }
 

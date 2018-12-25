@@ -1,6 +1,7 @@
 package process
 
 import (
+	"XzibitChat/chat"
 	"encoding/json"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"strings"
@@ -14,8 +15,17 @@ type RegistrationCommand struct {
 	login    string
 }
 
+func NewReg(user *chat.User, login, password string) *RegistrationCommand{
+	return &RegistrationCommand{
+		login : login,
+		password: password,
+		DefaultUserHandler: DefaultUserHandler{
+			user: user,
+		},
+	}
+}
 func (r RegistrationCommand) CommandName() string {
-    return "Registration"
+    return "reg"
 }
 
 func ( RegistrationCommand) IsGlobal() bool {

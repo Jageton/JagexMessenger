@@ -8,6 +8,7 @@ import (
 type SendMessageCommand struct {
 	DefaultUserHandler
 	DefaultCommandNameGetterSetter
+	DefaultAnswerParser
 	msg  *tmessage.TMessage
 }
 
@@ -16,19 +17,16 @@ func (s *SendMessageCommand) CommandName() string {
 }
 
 func (s *SendMessageCommand) Help() string {
-    return "You must be in Dialogue"
+    return "[/send] ''You must be in Dialogue"
 }
 
 func (s *SendMessageCommand) GetParsedJSON() (bytes []byte) {
 	return nil
 }
 
-func (s *SendMessageCommand) ParseData(*tgbotapi.Message) bool {
+func (s *SendMessageCommand) ParseData(msg *tgbotapi.Message) bool {
+	s.msg = tmessage.NewTMessage(msg.From.UserName, msg.Text, s.user.ID())
     return true
-}
-
-func (s *SendMessageCommand) ParseAnswer(map[string]interface{}) error {
-    return nil
 }
 
 func (s *SendMessageCommand) Execute() {

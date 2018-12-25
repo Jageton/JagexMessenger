@@ -14,7 +14,7 @@ type Requests struct {
 func NewReqests() *Requests {
 	return &Requests{
 		requests: make(map[int64]commands.Command),
-		id: 0,
+		id: 5,
 		mutex: &sync.RWMutex{},
 	}
 }
@@ -34,13 +34,16 @@ func (r *Requests) Remove(id int64) {
 }
 
 func (r *Requests) Execute(answer *Answer) {
-	cmd := r.requests[answer.Request]
-	err := cmd.ParseAnswer(answer.Value)
+	cmd, ok:= r.requests[answer.Id]
+	if !ok {
+		return
+	}
+	err := cmd.ParseAnswer([]byte(answer.Data))
 	if err != nil {
 		go cmd.Fail(err.Error())
 	}else{
-		go r.requests[answer.Request].Execute()
+		go r.requests[answer.Id].Execute()
 	}
-	r.Remove(answer.Request)
+	r.Remove(answer.Id)
 }
 

@@ -10,11 +10,12 @@ type LoginCommand struct {
 	DefaultUserHandler
 	DefaultAnswerParser
 	DefaultCommandNameGetterSetter
+	login string
 	password string
 }
 
 func (l *LoginCommand) CommandName() string {
-    return "Auth"
+    return "auth"
 }
 
 func (l *LoginCommand) GetParsedJSON() []byte {
@@ -28,23 +29,25 @@ func (l *LoginCommand) GetParsedJSON() []byte {
 }
 
 func (l *LoginCommand) ParseData(msg *tgbotapi.Message) bool {
-	passw := strings.Split(msg.CommandArguments(), " ")
-	if passw[0] == "" {
+	str := strings.Split(msg.CommandArguments(), " ")
+	if str[0] == "" {
 		return false
 	}
-	if len(passw) != 1 {
+	if len(str) != 2 {
 		return false
 	}
-	l.password = msg.CommandArguments()
+	l.login = str[0]
+	l.password = str[1]
 	return true
 }
 
 func (l *LoginCommand) Help() string {
-    return "/login password"
+    return "/login login password"
 }
 
 func (l *LoginCommand) Execute() {
 	l.user.SetLogin(true)
+	SendMessage(l.user.ID(), "Success!")
 }
 
 func (l *LoginCommand) IsGlobal() bool {

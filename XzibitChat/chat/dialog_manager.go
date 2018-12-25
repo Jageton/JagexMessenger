@@ -33,7 +33,7 @@ func (h *DialogManager) AddEmpty(id int64) error {
 	}
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-	h.hubs[id] = NewHub()
+	h.hubs[id] = NewHub(id)
 	return nil
 }
 

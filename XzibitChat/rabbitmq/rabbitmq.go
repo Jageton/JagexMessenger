@@ -50,9 +50,13 @@ func (m *MsgBroker) Connect() error {
 	if err != nil {
 		return err
 	}
+
 	m.requests = NewReqests()
 	m.connection = conn
 	ch, err := conn.Channel()
+	if err != nil {
+		return err
+	}
 	m.channel = ch
 	answers, err := ch.Consume(m.ConsumeQueue.Name,
 		                       m.ConsumeQueue.Consumer,
@@ -61,6 +65,9 @@ func (m *MsgBroker) Connect() error {
 		                       m.ConsumeQueue.NoLocal,
 		                       m.ConsumeQueue.NoWait,
 		                       m.ConsumeQueue.Args)
+	if err != nil {
+		return err
+	}
 	go m.Listen(answers)
 	return nil
 }
@@ -69,8 +76,8 @@ func (m *MsgBroker) Send(command commands.Command){
 	id := m.requests.Add(command)
 	request := &Request{
 		Id: id,
-		CommandName: command.CommandName(),
-		Value: command.GetParsedJSON(),
+		Command: command.CommandName(),
+		Data: command.GetParsedJSON(),
 	}
 	bytes, _ := json.Marshal(request)
 	msg := amqp.Publishing{
@@ -94,6 +101,7 @@ func (m *MsgBroker) Listen(ch <-chan amqp.Delivery){
 	for msg := range ch {
 		answer, _ := parseAnswer(msg.Body)
 		m.requests.Execute(answer)
+		msg.Ack(false)
 	}
 }
 

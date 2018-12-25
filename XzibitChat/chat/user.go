@@ -1,8 +1,8 @@
 package chat
 
 import (
-	"XzibitChat/tmessage"
 	"XzibitChat/telegram"
+	"XzibitChat/tmessage"
 )
 
 type User struct {

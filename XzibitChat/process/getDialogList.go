@@ -3,6 +3,7 @@ package process
 import (
 	"encoding/json"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/mitchellh/mapstructure"
 	"strconv"
 )
 
@@ -17,13 +18,21 @@ func (d *Dialog) String() string {
 
 type GetDialogListCommand struct {
 	DefaultUserHandler
-	DefaultAnswerParser
 	DefaultCommandNameGetterSetter
 	DialogsList []Dialog
 }
 
+func (g *GetDialogListCommand) ParseAnswer(args []byte) error {
+	m := map[string]interface{}{}
+	err := json.Unmarshal(args, &m)
+	if err != nil {
+		return err
+	}
+	return mapstructure.Decode(m, &g)
+}
+
 func (g GetDialogListCommand) CommandName() string {
-    return "GetDialogList"
+    return "get_dialogs"
 }
 
 func ( GetDialogListCommand) IsGlobal() bool {
@@ -34,8 +43,8 @@ func (g *GetDialogListCommand) PreExecuteCheck() bool {
 	msg := ""
 	isOk := true
 	switch  {
-	case g.user.IsLogon():
-		msg = "You are already logged in"
+	case !g.user.IsLogon():
+		msg = "You are not logged in"
 		isOk = false
 	case g.user.InHub():
 		msg = "Please leave dialog!"
@@ -68,6 +77,6 @@ func ( GetDialogListCommand) ParseData(*tgbotapi.Message) bool {
 }
 
 func ( GetDialogListCommand) Help() string {
-    return "/dialoglist"
+    return "/dialogs"
 }
 

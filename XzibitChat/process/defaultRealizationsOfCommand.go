@@ -2,15 +2,10 @@ package process
 
 import (
 	"XzibitChat/chat"
-	"XzibitChat/commands"
+	"encoding/json"
 	"errors"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/mitchellh/mapstructure"
 )
-
-func Parse(args map[string]interface{}, cmd *commands.Command) error {
-	return mapstructure.Decode(args, cmd)
-}
 
 type DefaultUserHandler struct {
 	user *chat.User
@@ -48,8 +43,13 @@ type DefaultAnswerParser struct {
 
 }
 
-func (DefaultAnswerParser) ParseAnswer(args map[string]interface{}) error {
-	if exc, ok := args["exception"]; ok {
+func (DefaultAnswerParser) ParseAnswer(args []byte) error {
+	m := map[string]interface{}{}
+	err := json.Unmarshal(args, &m)
+	if err != nil {
+		return err
+	}
+	if exc, ok := m["Exception"]; ok {
 		exception := exc.(string)
 		if exception == "" {
 			return nil

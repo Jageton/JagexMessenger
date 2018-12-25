@@ -15,7 +15,7 @@ type LeaveDialogCommand struct {
 }
 
 func (e LeaveDialogCommand) CommandName() string {
-    return "LeaveDialog"
+    return "leave_dialog"
 }
 
 func ( LeaveDialogCommand) IsGlobal() bool {
@@ -37,6 +37,11 @@ func (e LeaveDialogCommand) PreExecuteCheck() bool {
 }
 
 func (e LeaveDialogCommand) Execute() {
+	if e.user.InHub() {
+		if e.user.Hub().ID() == e.DialogId {
+			e.user.Hub().LeaveHub(e.user.ID())
+		}
+	}
 	SendMessage(e.user.ID(), "You left from the dialog!")
 }
 

@@ -17,7 +17,7 @@ type EnterDialogCommand struct {
 }
 
 func (e *EnterDialogCommand) CommandName() string {
-    return "EnterDialog"
+    return "enter_dialog"
 }
 
 func (e *EnterDialogCommand) GetParsedJSON() []byte {
@@ -46,7 +46,7 @@ func (e *EnterDialogCommand) ParseData(msg *tgbotapi.Message) bool {
 }
 
 func (e *EnterDialogCommand) Help() string {
-    return "/enterHub id"
+    return "/enter id"
 }
 
 func (e *EnterDialogCommand) IsGlobal() bool {
@@ -74,8 +74,9 @@ func (e *EnterDialogCommand) Execute() {
 	if hub, ok := Processor.Hubs.Get(e.DialogId); ok {
 		hub.EnterHub(e.user)
 	}else{
-		h := chat.NewHub()
+		h := chat.NewHub(e.DialogId)
 		h.EnterHub(e.user)
 		Processor.Hubs.Add(e.DialogId, h)
 	}
+	SendMessage(e.user.ID(), "You entered to dialog!")
 }

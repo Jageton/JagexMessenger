@@ -10,12 +10,14 @@ var Commands = Commander{
 	"end" : &EndSession{},
 	"enter" : &EnterDialogCommand{},
 	"exit" : &ExitDialogCommand{},
-	"dialogues" : &GetDialogListCommand{},
+	"dialogs" : &GetDialogListCommand{},
 	"invite" : &InviteUserCommand{},
 	"leave" : &LeaveDialogCommand{},
 	"login" : &LoginCommand{},
-	"registration" : &RegistrationCommand{},
+	"regr" : &RegistrationCommand{},
 	"send" : &SendMessageCommand{},
+	"help" : &HelpCommand{},
+	"status" : &StatusCommand{},
 }
 
 
